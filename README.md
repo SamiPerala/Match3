@@ -1,2 +1,2 @@
-# Clock-basic
-Basic clock with alarm features
+# Match 3 game
+Match 3 game
