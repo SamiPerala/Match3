@@ -10,3 +10,15 @@
   --dark-grey: #1b1b32;
 }
 
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100vh;
+
+}
+
+canvas {
+  border: 2px solid black;
+}
