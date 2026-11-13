@@ -27,12 +27,21 @@ checkForThree function
     IF three
     RETURN [...]
 
+initialCheck function
+    GET Grid
+    LOOP and Check if a color repeats 3 or more times in a row in each direction
+    if they do match. add them to an array
+    Toggle colors in the array.
+    RETURN 
+
 */
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let grid = [];
+let gridSize = 8;
 let selectedElement = [];
+let matchingElements = []
 let elementWidth = 50;
 
 const gameElements = {
@@ -65,6 +74,7 @@ function initGrid(size) {
     return grid;
 }
 console.log(grid)
+
 function isColliding(a, b) {
     return (
     a.x < b.offsetX &&
@@ -94,7 +104,7 @@ function toggleSelected(x, y, width, height, rectColor, boolean) {
 }
 
 function reRender(x, y, width, height, rectColor, boolean) {
-     if (boolean) {
+    if (boolean) {
         ctx.beginPath();
         ctx.clearRect(x - 2, y - 2, width + 4, height + 4);
         ctx.fillStyle = rectColor;
@@ -181,7 +191,7 @@ function swapTargets(target1, target2) {
                 if(block.id === selectedElement[0].id) {
                     block.toggled = false;
                 }
-                 if(block.id === selectedElement[1].id) {
+                if(block.id === selectedElement[1].id) {
                     block.toggled = false;
                 }
             })
@@ -193,8 +203,153 @@ function swapTargets(target1, target2) {
     } 
 }
 
-function checkMatching() {
-    
+function initialCheck() {
+    let vertical = 0;
+    let horizontal = gridSize;
+    let prev = null;
+    let curr = null;
+    let next = null;
+//+horizontalCheck
+    grid.forEach((vLine, lineIndex) => {
+            vLine.forEach((block) => {
+                
+                    for (let i = 0; i < vLine.length; i++) {
+                        if (block.id === `${i}${i}`) {
+                            //block.toggled = !block.toggled;
+                            //toggleSelected(block.x, block.y, 50, 50, block.color, block.toggled)
+                            //console.log(grid[i][i])
+
+                            for (let j = i; j < horizontal - 1; j++) {
+                                prev = grid[j - 1]  ? grid[j - 1][i].color : null;
+                                curr = grid[j][i].color;
+                                next = grid[j + 1] ? grid[j + 1][i].color : null;
+                                /*console.log(grid[j - 1] ? grid[j - 1][i]?.id : null)
+                                console.log(grid[j - 1] ? grid[j - 1][i]?.color : null)
+
+                                console.log(grid[j][i].id)
+                                console.log(grid[j][i].color)
+
+                                console.log(grid[j + 1] ? grid[j + 1][i]?.id : null)
+                                console.log(grid[j + 1] ? grid[j + 1][i]?.color : null)
+*/
+                                if(prev === curr &&
+                                    next === curr) {
+                                       // console.log(prev, curr, next)
+                                        let newColor = randomC();
+                                        while (curr === newColor) {
+                                            newColor = randomC();
+                                        }
+                                        //console.log(`Old: ${grid[j][i].color}, New: ${newColor}`)
+                                        grid[j][i].color = newColor;
+                                        curr = newColor;
+                                        reRender(grid[j][i].x, grid[j][i].y, 50, 50, newColor, true)
+                                        
+                                    }
+                            }
+
+                            
+                        }
+                        
+                    }
+
+                    //-horizontalCheck
+
+                    for (let i = 0; i < vLine.length; i++) {
+                        if (block.id === `${i}${i}`) {
+                            for (let j = i; j > 0; j--) {
+                                prev = grid[j + 1]  ? grid[j + 1][i].color : null;
+                                curr = grid[j][i].color;
+                                next = grid[j - 1] ? grid[j - 1][i].color : null;
+                                /*console.log(grid[j + 1] ? grid[j + 1][i]?.id : null)
+                                console.log(grid[j + 1] ? grid[j + 1][i]?.color : null)
+
+                                console.log(grid[j][i].id)
+                                console.log(grid[j][i].color)
+
+                                console.log(grid[j - 1] ? grid[j - 1][i]?.id : null)
+                                console.log(grid[j - 1] ? grid[j - 1][i]?.color : null)
+                                */
+                                if(prev === curr &&
+                                    next === curr) {
+                                        console.log(prev, curr, next)
+                                        let newColor = randomC();
+                                        while (curr === newColor) {
+                                            newColor = randomC();
+                                        }
+                                        //console.log(`Old: ${grid[j][i].color}, New: ${newColor}`)
+                                        grid[j][i].color = newColor;
+                                        curr = newColor;
+                                        reRender(grid[j][i].x, grid[j][i].y, 50, 50, newColor, true)
+                                    }
+                        }
+                    }
+                    }
+
+                    //+vertical check
+                    for (let i = 0; i < vLine.length; i++) {
+                        if (block.id === `${i}${i}`) {
+                            for (let j = i; j < horizontal; j++) {
+                                prev = grid[i]  ? grid[i][j - 1]?.color : null;
+                                curr = grid[i][j].color;
+                                next = grid[i] ? grid[i][j + 1]?.color : null;
+                                /*console.log(grid[j + 1] ? grid[j + 1][i]?.id : null)
+                                console.log(grid[j + 1] ? grid[j + 1][i]?.color : null)
+
+                                console.log(grid[j][i].id)
+                                console.log(grid[j][i].color)
+
+                                console.log(grid[j - 1] ? grid[j - 1][i]?.id : null)
+                                console.log(grid[j - 1] ? grid[j - 1][i]?.color : null)
+                                */
+                                if(prev === curr &&
+                                    next === curr) {
+                                        console.log(prev, curr, next)
+                                        let newColor = randomC();
+                                        while (curr === newColor) {
+                                            newColor = randomC();
+                                        }
+                                       // console.log(`Old: ${grid[j][i].color}, New: ${newColor}`)
+                                        grid[j][i].color = newColor;
+                                        curr = newColor;
+                                        reRender(grid[i][j].x, grid[i][j].y, 50, 50, newColor, true)
+                                    }
+                        }
+                    }
+                    }
+                    //-vertical check
+                    for (let i = 0; i < vLine.length; i++) {
+                        if (block.id === `${i}${i}`) {
+                            for (let j = i; j > 0; j--) {
+                               // console.log(grid[i][j].id)
+                                prev = grid[i]  ? grid[i][j + 1]?.color : null;
+                                curr = grid[i][j].color;
+                                next = grid[i] ? grid[i][j - 1]?.color : null;
+                                /*console.log(grid[j + 1] ? grid[j + 1][i]?.id : null)
+                                console.log(grid[j + 1] ? grid[j + 1][i]?.color : null)
+
+                                console.log(grid[j][i].id)
+                                console.log(grid[j][i].color)
+
+                                console.log(grid[j - 1] ? grid[j - 1][i]?.id : null)
+                                console.log(grid[j - 1] ? grid[j - 1][i]?.color : null)
+                                */
+                                if(prev === curr &&
+                                    next === curr) {
+                                        console.log(prev, curr, next)
+                                        let newColor = randomC();
+                                        while (curr === newColor) {
+                                            newColor = randomC();
+                                        }
+                                        //console.log(`Old: ${grid[j][i].color}, New: ${newColor}`)
+                                        grid[j][i].color = newColor;
+                                        curr = newColor;
+                                        reRender(grid[i][j].x, grid[i][j].y, 50, 50, newColor, true)
+                                    }
+                        }
+                    }
+                    }
+            })
+        });
 }
 
 function removeBlocks(array) {
@@ -203,7 +358,8 @@ function removeBlocks(array) {
 
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    initGrid(8)
+    initGrid(gridSize)
+    initialCheck()
 }
 
 gameLoop();
