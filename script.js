@@ -26,10 +26,19 @@ checkForThree function
     GET Grid
     LOOP and Check if a color repeats 3 or more times in a row in each direction
     IF three match PUSH to matchArray and keep pushing every next
-    REMOVE all the matches from grid
-    Move the elements above down and generate new ones from top
-    Add the number of elements removed to score
     RETURN [...]
+
+
+score function 
+    Add the number of elements in matchArray to score.
+
+
+fillBoard funtion
+    GET matchArray.
+    LOOP matchArray and from each element should be traveled upward and move the next to the current.
+    IF index === 0 generate random color
+    checkForThree again and add score if necessary.
+
 
 initialCheck function
     GET Grid
@@ -37,16 +46,32 @@ initialCheck function
     if they do match take the middle one and change the color to different one.
     RETURN 
 
+
+MoveElements function
+    GET grid item old location and move to new location
 */
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-
 let grid = [];
-let gridSize = 8;
+let gridSize = 5;
 let selectedElement = [];
-let matchArray = []
+let matchArray = [];
+let fillArray = [];
+let moveArray = [];
 let elementWidth = 50;
+let padding = 10;
+let outerPadding = 65;
+let gameObjSize = padding + elementWidth;
 let gameInit = false;
+let score = document.getElementById("score");
+let validCheck = true;
+let scoreCount = 0;
+let dy = 1;
+canvas.width = gridSize * (elementWidth + padding) + outerPadding * 2;
+canvas.height = gridSize * (elementWidth + padding) + outerPadding * 2;
+
+
+
 
 const gameElements = {
     1: "lightgreen",
@@ -68,9 +93,10 @@ function initGrid(size) {
         for (let j = 0; j < size; j++) {
             grid[i].push({
                 id: `${i}${j}`,
-                x: 5 + (60 * i),
-                y: 5 + ( 60 * j),
+                x: outerPadding + padding / 2 + (gameObjSize * i),
+                y: outerPadding + padding / 2 + ( gameObjSize * j),
                 color: randomC(),
+                removed: false,
                 toggled: false
             })
             ctx.fillStyle = grid[i][j].color;
@@ -108,32 +134,100 @@ function toggleSelected(x, y, width, height, rectColor, boolean) {
     }
 }
 
-function reRender(x, y, width, height, rectColor, boolean) {
-    if (boolean) {
-        ctx.beginPath();
+/* let x = 50;
+let y = 100;
+let dx = 5;
+
+let speed = 0.05; */
+
+
+ function animateImg() {
+    ctx.clearRect(0, 0 ,canvas.width, canvas.height);
+   ctx.beginPath();
+   ctx.arc(x,y,30,0,Math.PI * 2);
+   ctx.fillStyle = "orange";
+   ctx.fill();
+   ctx.closePath(); 
+
+    //img.onload = () => {
+    //ctx.drawImage(img, x, y, 100, 150);
+    //}
+    //Update position
+     if (y < 300) {
+    y += dy;
+    } 
+
+   // y = Math.min(100, dy);
+
+    //bouncing
+     if (x + 30 >= canvas.width || x - 30 <= 0) {
+    dx = -dx;
+    }
+    if (y + 30 >= canvas.height || y - 30 <= 0) {
+    dy = -dy;
+    } 
+     requestAnimationFrame(animateImg);
+
+  
+    } 
+    let moveY = 10;
+
+function moveElement() {
+
+        ctx.clearRect(x - 2, moveY - 2, width + 4, height + 4);
+        
+        ctx.fillStyle = rectColor;
+       
+        ctx.fillRect(x, moveY, width, height);
+        //ctx.fillRect(x, y, elementWidth, elementWidth);
+
+        while(moveY < y) {
+            moveY += dy;
+        }
+    requestAnimationFrame(moveElement);
+}
+
+
+ function reRender(x, y, width, height, rectColor) {
         ctx.clearRect(x - 2, y - 2, width + 4, height + 4);
+        ctx.beginPath();
         ctx.fillStyle = rectColor;
         ctx.fillRect(x, y, elementWidth, elementWidth);
         ctx.closePath();
-    } 
-}
+    
+} 
 
 canvas.addEventListener("click", (e) => {
     const {offsetX: x, offsetY: y} = e;
     //console.log(`OffsetX: ${x}, OffsetY: ${y}`)
-    
     grid.forEach((vLine, lineIndex) => {
         vLine.forEach((block, bIndex) => {
             //console.log(isColliding(block, e) && console.log(`Found a match!  -  BlockX: ${block.x}, BlockY: ${block.y}, Color: ${block.color}, ID: ${block.id}`));
             if(isColliding(block, e)) {
                 selectedElement.push(block);
+                console.log(block.id, block.color, block.removed)
                 block.toggled = !block.toggled;
                 toggleSelected(block.x, block.y, 50, 50,block.color , block.toggled)
                 //console.log(block.id)
                 if (selectedElement.length === 2) {
                     swapTargets(selectedElement[0], selectedElement[1]);
-                    checkMatch();
-                    console.log(matchArray)
+                    
+                    do {
+                        validCheck = true
+                        checkMatch();
+                        orderArray(matchArray)
+                        //console.log(matchArray);
+                        fillBoard(); 
+                        checkMatch();
+
+                        //removeEl(matchArray);
+
+                    } while (!validCheck)
+                    console.log(grid)
+
+                    setRemovedFalse();
+                    matchArray = [];
+                    fillArray = [];
                     selectedElement = [];
                 }
                 if (!block.toggled) {
@@ -241,6 +335,7 @@ function initialCheck() {
 */
                                 if(prev === curr &&
                                     next === curr) {
+                                        validCheck = false;
                                        // console.log(prev, curr, next)
                                         let newColor = randomC();
                                         while (curr === newColor) {
@@ -270,6 +365,7 @@ function initialCheck() {
                             
                                 if(prev === curr &&
                                     next === curr) {
+                                        validCheck = false;
                                         let newColor = randomC();
                                         while (curr === newColor) {
                                             newColor = randomC();
@@ -292,6 +388,7 @@ function initialCheck() {
                                 
                                 if(prev === curr &&
                                     next === curr) {
+                                        validCheck = false;
                                         let newColor = randomC();
                                         while (curr === newColor) {
                                             newColor = randomC();
@@ -313,6 +410,7 @@ function initialCheck() {
 
                                 if(prev === curr &&
                                     next === curr) {
+                                        validCheck = false;
                                         //console.log(prev, curr, next)
                                         let newColor = randomC();
                                         while (curr === newColor) {
@@ -342,25 +440,27 @@ function checkMatch() {
                     for (let i = 0; i < vLine.length; i++) {
                         if (block.id === `${i}${i}`) {
                             for (let j = i; j < horizontal - 1; j++) {
-    console.log("got here")
-
                                 prev = grid[j - 1] ? grid[j - 1][i] : null;
                                 curr = grid[j][i];
                                 next = grid[j + 1] ? grid[j + 1][i] : null;
                                 if(prev?.color === curr?.color &&
                                     next?.color === curr?.color) {
-                                    console.log(prev, curr, next)
+                                    //console.log(prev, curr, next)
                                     if (!matchArray.some(el => el.id === prev.id)) {
+                                        validCheck = false;
+                                        grid[j - 1][i].removed = true;
                                         matchArray.push(prev)
                                     }
                                     if (!matchArray.some(el => el.id === curr.id)) {
+                                        validCheck = false;
+                                        grid[j][i].removed = true;
                                         matchArray.push(curr)
                                     }
                                     if (!matchArray.some(el => el.id === next.id)) {
+                                        validCheck = false;
+                                        grid[j + 1][i].removed = true;
                                         matchArray.push(next)
                                     }
-                                    
-
                                         //reRender(grid[j][i].x, grid[j][i].y, 50, 50, newColor, true)
                                     }
                             }
@@ -379,12 +479,18 @@ function checkMatch() {
                                 if(prev?.color === curr?.color &&
                                     next?.color === curr?.color) {
                                     if (!matchArray.some(el => el.id === prev.id)) {
+                                        validCheck = false;
+                                        grid[j + 1][i].removed = true;
                                         matchArray.push(prev)
                                     }
                                     if (!matchArray.some(el => el.id === curr.id)) {
+                                        validCheck = false;
+                                        grid[j][i].removed = true;
                                         matchArray.push(curr)
                                     }
                                     if (!matchArray.some(el => el.id === next.id)) {
+                                        validCheck = false;
+                                        grid[j - 1][i].removed = true;
                                         matchArray.push(next)
                                     }
                                         //reRender(grid[j][i].x, grid[j][i].y, 50, 50, newColor, true)
@@ -404,12 +510,18 @@ function checkMatch() {
                                 if(prev?.color === curr?.color &&
                                     next?.color === curr?.color) {
                                     if (!matchArray.some(el => el.id === prev.id)) {
+                                        validCheck = false;
+                                        grid[i][j - 1].removed = true;
                                         matchArray.push(prev)
                                     }
                                     if (!matchArray.some(el => el.id === curr.id)) {
+                                        validCheck = false;
+                                        grid[i][j].removed = true;
                                         matchArray.push(curr)
                                     }
                                     if (!matchArray.some(el => el.id === next.id)) {
+                                        validCheck = false;
+                                        grid[i][j + 1].removed = true;
                                         matchArray.push(next)
                                     }
                                         //reRender(grid[i][j].x, grid[i][j].y, 50, 50, newColor, true)
@@ -428,12 +540,18 @@ function checkMatch() {
                                 if(prev?.color === curr?.color &&
                                     next?.color === curr?.color) {
                                     if (!matchArray.some(el => el.id === prev.id)) {
+                                        validCheck = false;
+                                        grid[i][j + 1].removed = true;
                                         matchArray.push(prev)
                                     }
                                     if (!matchArray.some(el => el.id === curr.id)) {
+                                        validCheck = false;
+                                        grid[i][j].removed = true;
                                         matchArray.push(curr)
                                     }
                                     if (!matchArray.some(el => el.id === next.id)) {
+                                        validCheck = false;
+                                        grid[i][j - 1].removed = true;
                                         matchArray.push(next)
                                     }
                                         //reRender(grid[i][j].x, grid[i][j].y, 50, 50, newColor, true)
@@ -443,12 +561,157 @@ function checkMatch() {
                     }
             })
         });
+        if (validCheck) {
+            console.log("ALL CLEAR, DID NOT FIND ANY MATCH 3")
+        }
+}
+
+function calcScore() {
+    matchArray.forEach((el) => {
+        scoreCount++;
+    })
+    score.textContent = scoreCount;
+}
+
+function orderArray(array) {
+    array.sort((a, b) => Number(b.id) - Number(a.id));
+}
+
+function fillBoard() {
+    let curr = null;
+    let next = null;
+    console.log("matchArray: ", matchArray);
+    matchArray.forEach((el) => {
+        let column = el.id.slice(0, 1);
+        let index = el.id.slice(1)
+        //console.log(column)
+        //console.log("this is index: ",index, "typeof index is: ", typeof index)
+        
+
+        for (let i = index; i >= 0 ; i--) {
+            //console.log("loop i in matchArray: ", i, "block id is: ", grid[column][i].id)
+
+            //console.log("Removed color:" ,grid[column][index].color)
+            //console.log(grid[column][i].id, " is removed: ", grid[column][i].removed )
+            console.log("----Current id: ", grid[column][i].id, " ----------")
+            
+           debugger;
+            if (grid[column][i].removed === false) {
+                let moveY = 10;
+                grid[column][i].removed = true;
+                fillArray.push(grid[column][i])
+                console.log("Top color: ", grid[column][i].color, "Moved to: ", grid[column][index].id)
+                grid[column][index].color = grid[column][i].color;
+                grid[column][index].removed = false;
+                reRender(grid[column][i].x, grid[column][i].y, 50, 50, grid[column][i].color, true);
+                reRender(grid[column][index].x, grid[column][index].y, 50, 50, grid[column][i].color, true);
+                
+                //console.log("New color: ", grid[column][index].color)
+                break;
+            }
+            if(i === 0 || index === "0") {
+                let newColor = randomC();
+                console.log("generated", newColor, " color to: ", grid[column][index].id )
+                grid[column][index].color = newColor;
+                grid[column][index].removed = false;
+                //grid[column][i].removed = false;
+                reRender(grid[column][index].x, grid[column][index].y, 50, 50, newColor, true);
+            }
+            
+            
+        }
+        
+        console.log(grid)
+    })
+    calcScore();
+    matchArray = [];
+    orderArray(fillArray);
+    console.log("fillArray: ", fillArray)
+        fillArray.forEach((el) => {
+            let column = Number(el.id.slice(0, 1));
+            let index = Number(el.id.slice(1));
+            //grid[column][index].removed = false;
+            for (let i = index; i >= 0 ; i--) {
+            //console.log("Removed color:" ,grid[column][index].color)
+            //console.log(grid[column][i].id, " is removed: ", grid[column][i].removed )
+            console.log("----Current id: ", grid[column][i].id, " ----------")
+            curr = grid[column][i];
+            next = grid[column][i - 1] ? grid[column][i - 1] : null;
+            debugger;
+
+           /*  if (i = index - 1) {
+                console.log("Top color: ", next.color, "Moved to: ", grid[column][index].id)
+
+                 grid[column][index].color = next.color;
+                reRender(grid[column][i].x, grid[column][i].y, 50, 50, next.color, true);
+
+            } */
+
+            if(i === 0 || index === "0" || next === null) {
+                let newColor = randomC();
+                console.log("generated", newColor, " color to: ", curr.id )
+                grid[column][i].color = newColor;
+                grid[column][i].removed = false;
+                //grid[column][i].removed = false;
+                reRender(curr.x, curr.y, 50, 50, newColor, true);
+                break;
+            }
+
+            if (next) {
+                //grid[column][i].removed = true;
+                console.log("Top color: ", next.color, "Moved to: ", curr.id)
+                grid[column][i].color = next.color;
+                grid[column][i].removed = false;
+                reRender(grid[column][i].x, grid[column][i].y, 50, 50, next.color, true);
+                //reRender(grid[column][index].x, grid[column][index].y, 50, 50, grid[column][i].color, true);
+                
+                //console.log("New color: ", grid[column][index].color)
+            }
+        }
+
+        })
+        fillArray = [];
+}
+
+function removeEl(array) {
+    if(matchArray.length > 0) {
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid.length; j++) {
+            for (let k = 0; k <= array?.length - 1; k++) {
+                if (grid[j][i].id === array[k]?.id) {
+                    //console.log("grid id: ", grid[j][i].id, "array id: ", array[k]?.id)
+                    //toggleSelected(grid[j][i].x, grid[j][i].y, 50, 50, "black", true)
+                    console.log("---------got to removeEl--------")
+                    //array?.splice(k, 1);
+                    //grid[j][i].removed = false;
+                    //reRender(grid[j][i].x, grid[j][i].y, 50, 50, "rgba(0, 0, 0, 0.0)", true)
+
+                }
+            }
+        }
+        
+    }
+    }
+    console.log("array length: ",array.length)
+    
+}
+
+function setRemovedFalse() {
+    grid.forEach((line) => {
+        line.forEach(el => el.removed = false)
+    })
+    
 }
 
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     initGrid(gridSize)
-    initialCheck()
+    
+    do {
+        validCheck = true;
+        initialCheck()
+        
+    } while (!validCheck)
 
     
     
@@ -458,4 +721,3 @@ gameLoop();
 
 
 
-console.log(grid)
